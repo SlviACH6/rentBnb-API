@@ -7,8 +7,14 @@ const router = Router()
 
 router.post('/houses', async (req, res) => {
   try {
-    const { location, price_per_night, bedroom, bathroom, description } =
-      req.body
+    const {
+      location,
+      price_night,
+      bedrooms,
+      bathrooms,
+      description,
+      house_photo
+    } = req.body
 
     //req token from json web token
     const token = req.cookies.jwt
@@ -30,16 +36,8 @@ router.post('/houses', async (req, res) => {
 
     const userId = decodedToken.user_id
 
-    const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
-  VALUES (
-    '${location}',
-    ${price_per_night},
-    ${bedroom},
-    ${bathroom},
-    '${description}',
-    ${userId})`
-
-    console.log(queryString)
+    const queryString = `INSERT INTO houses (user_id, location, bedrooms, bathrooms, price_night, description, house_photo)
+  VALUES (${userId},'${location}',${price_night},${bedrooms}, ${bathrooms}, '${description}', '${house_photo}')`
 
     const { rows } = await db.query(queryString)
 
@@ -53,14 +51,14 @@ router.post('/houses', async (req, res) => {
 
 router.get('/houses', async (req, res) => {
   let queryString = 'SELECT * FROM houses WHERE TRUE'
-  console.log(queryString)
+
   const { location, max_price, min_rooms, sort, search, order } = req.query
   try {
     if (location) {
       queryString += ` AND location = '${location}'`
     }
     if (max_price) {
-      queryString += ` AND price_per_night <= ${max_price}`
+      queryString += ` AND price_night <= ${max_price}`
     }
     if (min_rooms) {
       queryString += ` AND bedrooms <= ${min_rooms}`
@@ -68,8 +66,8 @@ router.get('/houses', async (req, res) => {
     if (search) {
       queryString += ` AND description LIKE '%${search}%'`
     }
-    if (sort === 'price') {
-      queryString += ` ORDER BY price_per_night ${order}'`
+    if (sort === 'price_night') {
+      queryString += ` ORDER BY price_night ${order}'`
     }
     if (sort === 'bedrooms') {
       queryString += ` ORDER BY bedrooms ${order}`
@@ -88,15 +86,15 @@ router.get('/houses', async (req, res) => {
 
 // this route gets a specific house ID based on the route parameter
 
-router.get('/houses/:houseId', async (req, res) => {
-  let houseId = req.params.houseId
+router.get('/houses/:house_id', async (req, res) => {
+  let house_id = req.params.house_id
   try {
     const { rows } = await db.query(
-      `SELECT * FROM houses WHERE house_id = ${houseId}`
+      `SELECT * FROM houses WHERE house_id = ${house_id}`
     )
     //if the array is empty throws a specific error
     if (!rows.length) {
-      throw new Error(`The house Id number ${houseId} does not exist.`)
+      throw new Error(`The house Id number ${house_id} does not exist.`)
     }
     console.log(rows)
     res.json(rows)
@@ -108,7 +106,7 @@ router.get('/houses/:houseId', async (req, res) => {
 
 // patch houses route
 
-router.patch('/houses/:houseId', async (req, res) => {
+router.patch('/houses/:house_id', async (req, res) => {
   try {
     //req token from json web token
     const token = req.cookies.jwt
@@ -125,22 +123,16 @@ router.patch('/houses/:houseId', async (req, res) => {
       throw new Error('Invalid authorization token')
     }
 
-    let houseId = req.params.houseId
-    const {
-      location,
-      price_per_night,
-      bedroom,
-      bathroom,
-      description,
-      user_id
-    } = req.body
+    let house_id = req.params.house_id
+    const { location, price_night, bedrooms, bathrooms, description, user_id } =
+      req.body
 
     let patchQueryString = ` UPDATE houses`
     if (
       location ||
-      price_per_night ||
-      bedroom ||
-      bathroom ||
+      price_night ||
+      bedrooms ||
+      bathrooms ||
       description ||
       user_id
     ) {
@@ -148,14 +140,14 @@ router.patch('/houses/:houseId', async (req, res) => {
       if (location) {
         patchQueryString += ` location = '${location}',`
       }
-      if (price_per_night) {
-        patchQueryString += ` price_per_night = ${price_per_night},`
+      if (price_night) {
+        patchQueryString += ` price_per_night = ${price_night},`
       }
-      if (bedroom) {
-        patchQueryString += ` bedroom = ${bedroom},`
+      if (bedrooms) {
+        patchQueryString += ` bedroom = ${bedrooms},`
       }
-      if (bathroom) {
-        patchQueryString += ` bathroom = ${bathroom},`
+      if (bathrooms) {
+        patchQueryString += ` bathroom = ${bathrooms},`
       }
       if (description) {
         patchQueryString += ` description = '${description}',`
@@ -165,7 +157,7 @@ router.patch('/houses/:houseId', async (req, res) => {
       }
 
       patchQueryString = patchQueryString.slice(0, -1)
-      patchQueryString += ` WHERE house_id = ${houseId} RETURNING *`
+      patchQueryString += ` WHERE house_id = ${house_id} RETURNING *`
     }
 
     const resQuery = await db.query(patchQueryString)
