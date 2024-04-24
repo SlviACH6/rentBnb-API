@@ -37,14 +37,15 @@ router.get('/photos', async (req, res) => {
   }
 })
 
-router.get('/photos/:photoId', async (req, res) => {
-  let photoId = req.params.photoId
+router.get('/photos/:house_id', async (req, res) => {
+  let houseId = req.params.house_id
   try {
     const { rows } = await db.query(
-      `SELECT * FROM house_photos WHERE photo_id = ${photoId}`
+      `SELECT * FROM house_photos WHERE house_id = ${houseId}`,
+      [houseId]
     )
     if (!rows.length) {
-      throw new Error(`The photo Id number ${photoId} does not exist.`)
+      throw new Error(`No photos found for house with ID ${houseId}`)
     }
     console.log(rows)
     res.json(rows)
