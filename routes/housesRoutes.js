@@ -87,14 +87,14 @@ router.get('/houses', async (req, res) => {
 // this route gets a specific house ID based on the route parameter
 
 router.get('/houses/:house_id', async (req, res) => {
-  let house_id = req.params.house_id
+  let houseId = req.params.house_id
   try {
     const { rows } = await db.query(
-      `SELECT * FROM houses WHERE house_id = ${house_id}`
+      `SELECT * FROM houses WHERE house_id = ${houseId}`
     )
     //if the array is empty throws a specific error
     if (!rows.length) {
-      throw new Error(`The house Id number ${house_id} does not exist.`)
+      throw new Error(`The house Id number ${houseId} does not exist.`)
     }
     console.log(rows)
     res.json(rows)

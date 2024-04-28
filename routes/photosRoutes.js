@@ -38,20 +38,22 @@ router.get('/photos', async (req, res) => {
 })
 
 router.get('/photos/:house_id', async (req, res) => {
-  let houseId = req.params.house_id
+  let house_id = req.params.house_id
   try {
     const { rows } = await db.query(
-      `SELECT * FROM house_photos WHERE house_id = ${houseId}`,
-      [houseId]
+      `SELECT hp.house_photosurl
+      FROM house_photos hp
+      INNER JOIN houses h ON hp.house_id = h.house_id
+      WHERE h.house_id = ${house_id}`
     )
     if (!rows.length) {
-      throw new Error(`No photos found for house with ID ${houseId}`)
+      throw new Error(`No photos found for house with ID ${house_id}`)
     }
     console.log(rows)
     res.json(rows)
   } catch (err) {
     console.error(err.message)
-    res.json({ error: err.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
