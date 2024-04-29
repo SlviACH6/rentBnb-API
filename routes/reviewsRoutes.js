@@ -34,22 +34,6 @@ router.get('/reviews', async (req, res) => {
   }
 })
 
-router.get(`/reviews/:review_id`, async (req, res) => {
-  let reviewId = req.params.review_id
-  console.log(reviewId)
-
-  try {
-    const { rows } = await db.query(
-      `SELECT * FROM reviews WHERE review_id = ${reviewId}`
-    )
-    res.json(rows)
-    console.log(rows)
-  } catch (err) {
-    console.error(err.message)
-    res.json({ error: err.message })
-  }
-})
-
 router.get(`/reviews/:house_id`, async (req, res) => {
   let houseReviewId = req.params.house_id
   console.log(houseReviewId)
