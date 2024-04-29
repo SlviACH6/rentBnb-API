@@ -25,7 +25,10 @@ router.post('/reviews', async (req, res) => {
 
 router.get('/reviews', async (req, res) => {
   try {
-    const { rows } = await db.query(`SELECT * FROM reviews`)
+    const { rows } = await db.query(`
+      SELECT reviews.*, users.profile_picture
+      FROM reviews
+      INNER JOIN users ON reviews.user_id = users.user_id`)
     console.log(rows)
     res.json(rows)
   } catch (err) {
@@ -40,7 +43,10 @@ router.get(`/reviews/:house_id`, async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `SELECT * FROM reviews WHERE house_id = ${houseReviewId}`
+      ` SELECT reviews.*, users.profile_picture
+      FROM reviews
+      INNER JOIN users ON reviews.user_id = users.user_id
+      WHERE reviews.house_id = ${houseReviewId}`
     )
     res.json(rows)
     console.log(rows)
