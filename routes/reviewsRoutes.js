@@ -6,9 +6,9 @@ const router = Router()
 // send post request
 
 router.post('/reviews', async (req, res) => {
-  const { date, review, rating, user_id, house_id } = req.body
-  const postQueryString = `INSERT INTO reviews (date, review, rating, user_id, house_id)
-  VALUES ('${date}', '${review}', ${rating}, ${user_id}, ${house_id} )
+  const { review_date, review, rating, user_id, house_id } = req.body
+  const postQueryString = `INSERT INTO reviews (review_date, review, rating, user_id, house_id)
+  VALUES ('${review_date}', '${review}', ${rating}, ${user_id}, ${house_id} )
   RETURNING * `
 
   try {
@@ -34,13 +34,29 @@ router.get('/reviews', async (req, res) => {
   }
 })
 
-router.get(`/reviews/:reviewId`, async (req, res) => {
-  let reviewId = req.params.reviewId
+router.get(`/reviews/:review_id`, async (req, res) => {
+  let reviewId = req.params.review_id
   console.log(reviewId)
 
   try {
     const { rows } = await db.query(
       `SELECT * FROM reviews WHERE review_id = ${reviewId}`
+    )
+    res.json(rows)
+    console.log(rows)
+  } catch (err) {
+    console.error(err.message)
+    res.json({ error: err.message })
+  }
+})
+
+router.get(`/reviews/:house_id`, async (req, res) => {
+  let houseReviewId = req.params.house_id
+  console.log(houseReviewId)
+
+  try {
+    const { rows } = await db.query(
+      `SELECT * FROM reviews WHERE house_id = ${houseReviewId}`
     )
     res.json(rows)
     console.log(rows)
