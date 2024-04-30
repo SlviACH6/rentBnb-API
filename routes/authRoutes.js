@@ -45,15 +45,15 @@ router.post('/signup', async (req, res) => {
 //LOGIN POST user already in DB
 router.post('/login', async (req, res) => {
   const { password, email } = req.body
-  let dbpassword = `SELECT * FROM users WHERE users.email = '${email}'`
+  let dbpassword = `SELECT * FROM users WHERE email = '${email}'`
   try {
     let { rows } = await db.query(dbpassword)
-
-    const isPswValid = await bcrypt.compare(password, rows[0].password)
 
     if (!rows.length) {
       throw new Error('User not found or password incorrect')
     }
+
+    const isPswValid = await bcrypt.compare(password, rows[0].password)
 
     if (isPswValid) {
       let payload = {
@@ -65,9 +65,12 @@ router.post('/login', async (req, res) => {
       res.cookie('jwt', token)
 
       res.json(`${rows[0].first_name} you are logged in`)
+    } else {
+      throw new Error('User not found or password incorrect')
     }
   } catch (err) {
     res.json({ error: err.message })
+    console.log(err.message)
   }
 })
 
