@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
       let token = jwt.sign(payload, jwtSecret)
       res.cookie('jwt', token)
 
-      res.json(`${rows[0].first_name} you are logged in`)
+      res.json({ token })
     } else {
       throw new Error('User not found or password incorrect')
     }
@@ -95,7 +95,7 @@ router.get('/profile', async (req, res) => {
       throw new Error('Invalid authentication token')
     }
     const { rows: userRows } = await db.query(`
-      SELECT user_id, first_name, last_name, email, profile_pictureurl
+      SELECT user_id, first_name, last_name, email, profile_picture
       FROM users WHERE user_id = ${decodedToken.user_id}
     `)
     res.json(userRows[0])
@@ -109,16 +109,14 @@ router.patch('/profile', async (req, res) => {
     // Validate Token
     const decodedToken = jwt.verify(req.cookies.jwt, jwtSecret)
     if (!decodedToken || !decodedToken.user_id || !decodedToken.email) {
-      throw new Error('Invalid authentication token')
+      return res.status(401).json({ error: 'Invalid authentication token' })
     }
     // Validate fields
-    if (
-      !req.body.first_name ||
-      !req.body.last_name ||
-      !req.body.email ||
-      !req.body.profile_pictureurl
-    ) {
-      throw new Error('at least 1 field must be modified')
+    const { first_name, last_name, email, profile_picture } = req.body
+    if (!first_name && !last_name && !email && !profile_picture) {
+      return res
+        .status(400)
+        .json({ error: 'At least one field must be modified' })
     }
     // Update user
     let query = `UPDATE users SET `
@@ -131,16 +129,17 @@ router.patch('/profile', async (req, res) => {
     if (req.body.email) {
       query += `email = '${req.body.email}', `
     }
-    if (req.body.profile_pictureurl) {
-      query += `profile_pictureurl = '${req.body.profile_pictureurl}', `
+    if (req.body.profile_picture) {
+      query += `profile_picture = '${req.body.profile_picture}', `
     }
     query = query.slice(0, -2)
-    query += `WHERE user_id = ${decodedToken.user_id} RETURNING user_id, first_name, last_name, email, profile_pictureurl  `
+    query += `WHERE user_id = ${decodedToken.user_id} RETURNING user_id, first_name, last_name, email, profile_picture`
     const { rows: userRows } = await db.query(query)
+
     // Respond
     res.json(userRows[0])
   } catch (err) {
-    res.json({ error: err.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
